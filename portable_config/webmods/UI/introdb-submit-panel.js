@@ -321,13 +321,14 @@
     state.panel.classList.add("open");
     state.button?.classList.add("kai-introdb-button-active");
     render();
-    send("open"); // Lua picks Intro/Outro from the playback position
+    send("open"); // Lua picks Intro/Outro from the position and pauses auto-skip
     keepControlsVisible();
     clearInterval(state.keepControlsTimer);
     state.keepControlsTimer = setInterval(keepControlsVisible, CONFIG.KEEP_CONTROLS_MS);
   }
 
   function closePanel() {
+    if (state.open) send("close"); // Lua resumes auto-skip
     state.open = false;
     clearInterval(state.keepControlsTimer);
     state.keepControlsTimer = null;
@@ -473,6 +474,9 @@
       if (retry < 100) setTimeout(() => init(retry + 1), 100);
       return;
     }
+
+    // A page reload can drop the panel without closing it, so start Lua closed
+    send("close");
 
     state.observer = new MutationObserver(() => {
       if (window.location.hash.startsWith(CONFIG.PLAYER_ROUTE)) scheduleCheck();

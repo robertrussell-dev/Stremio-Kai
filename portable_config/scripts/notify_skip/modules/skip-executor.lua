@@ -17,6 +17,7 @@ local M = {}
 -- Forward declarations (will be set by main.lua)
 M.filter_engine = nil
 M.notification = nil
+M.introdb_submit = nil
 
 --============================================================================--
 --                          HELPER FUNCTIONS                                   --
@@ -215,7 +216,9 @@ end
 -- Check for auto-skip on chapter entry (only for high confidence chapters)
 function M.check_auto_skip()
     if not config.opts.auto_skip then return end
-    
+    -- Marking IntroDB times means sitting inside the segment on purpose
+    if M.introdb_submit and M.introdb_submit.is_marking() then return end
+
     local current_chapter_idx = mp.get_property_native("chapter")
     local current_time = mp.get_property_native("time-pos")
     local skip_chapters = state.chapter_cache.skippable_chapters or {}

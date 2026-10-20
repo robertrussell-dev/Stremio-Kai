@@ -64,6 +64,7 @@ notification.skip_button = skip_toast
 filter_engine.notification = notification
 skip_executor.filter_engine = filter_engine
 skip_executor.notification = notification
+skip_executor.introdb_submit = introdb_submit
 
 -- Track active skippable chapter key to debounce and control notifications
 local active_skippable_chapter_key = nil

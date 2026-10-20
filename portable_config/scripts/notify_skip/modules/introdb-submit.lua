@@ -66,7 +66,10 @@ local marks = {
     start_sec = nil,
     end_sec = nil,
     episode_key = nil,
+    by_keyboard = false,     -- started with the mark-start key (pauses auto-skip)
 }
+
+local panel_open = false
 
 local pending_confirm = nil   -- keyboard confirmation: { timer }
 local submitting = false
@@ -292,6 +295,7 @@ end
 local function clear_marks()
     marks.start_sec, marks.end_sec, marks.episode_key = nil, nil, nil
     marks.type_explicit = false
+    marks.by_keyboard = false
     clear_confirm()
 end
 
@@ -425,6 +429,7 @@ function M.mark_start()
 
     set_start(t)
     marks.end_sec = nil
+    marks.by_keyboard = true
     show(string.format("%s start %s. Mark end with %s (%s changes type)",
         SEGMENT_NAMES[current_type()], fmt_time(t), key_for("introdb-mark-end"),
         key_for("introdb-cycle-type")))
@@ -581,6 +586,7 @@ local panel_actions = {
     -- Panel opened: with no marks in progress, pick Intro or Outro from how
     -- far into the video we are (same cutoff as the start-mark guess)
     ["open"] = function()
+        panel_open = true
         if not marks_current() then
             local t = current_time()
             local duration = mp.get_property_native("duration") or 0
@@ -591,12 +597,16 @@ local panel_actions = {
         end
         publish_state()
     end,
+    ["close"] = function()
+        panel_open = false
+    end,
 }
 
 local function on_panel_action(action, arg)
     local fn = panel_actions[action]
     if not fn then return end
-    local err = action ~= "refresh" and action ~= "clear" and action ~= "open" and availability_error()
+    local err = action ~= "refresh" and action ~= "clear" and action ~= "open" and action ~= "close"
+        and availability_error()
     -- A new action replaces the previous result message (e.g. last "submitted")
     -- and means the user is still working, so it cancels a pending auto-close
     if action ~= "refresh" then
@@ -676,6 +686,12 @@ local function publish_pubkey()
             mp.msg.warn("IntroDB: could not create key-exchange value; submissions unavailable")
         end
     end)
+end
+
+-- True while the user is marking times (panel open, or a keyboard marking in
+-- progress), so skip-executor holds off auto-skip until they're done
+function M.is_marking()
+    return panel_open or (marks.by_keyboard and marks_current())
 end
 
 -- Called by main.lua when IntroDB segments arrive, so the panel shows them
