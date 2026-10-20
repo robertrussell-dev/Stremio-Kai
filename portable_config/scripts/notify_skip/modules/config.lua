@@ -21,6 +21,7 @@ M.opts = {
     filters_notification_duration = 5,
     min_skip_duration = 10,
     intro_length_check = 200,
+    introdb_api_url = "https://api.introdb.app",
 
     logo_patterns = "Logo|Studio|Production",
     opening_patterns = "^OP$|^OP%d+$|Opening|Intro|Introduction|Theme Song|Main Theme|Title Sequence|Cold Open|Teaser",
